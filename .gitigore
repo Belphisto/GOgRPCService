@@ -1,2 +1,2 @@
-go-build/
-go-env/
+/go-build
+/go-env
