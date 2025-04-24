@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	pb "github.com/Belphisto/GOgRPCService/proto"
@@ -13,59 +14,101 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func streamMessages(client pb.SocialServiceClient) {
-	ctx, cancel := context.WithCancel(context.Background())
+// Функция для отображения истории чата
+func displayChatHistory(socialClient pb.SocialServiceClient) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	stream, err := client.StreamFeed(ctx, &pb.StreamRequest{})
+	resp, err := socialClient.GetFeed(ctx, &pb.FeedRequest{})
 	if err != nil {
-		log.Fatalf("Ошибка подключения к потоку: %v", err)
+		log.Fatalf("Ошибка получения истории чата: %v", err)
 	}
 
-	fmt.Println("\n🔄 Начинаем потоковое получение сообщений.") // Исправлено
-
-	for {
-		msg, err := stream.Recv()
-		if err != nil {
-			log.Fatalf("Ошибка получения сообщения: %v", err)
+	fmt.Println("\n📜 История чата:")
+	for _, msg := range resp.Messages {
+		fmt.Printf("\n📩 Сообщение #%d от %s: %s (❤️ %d лайков)\n", msg.MessageId, msg.Username, msg.Content, msg.LikeCount)
+		for _, comment := range msg.Comments {
+			fmt.Printf("💬 [%s]: %s\n", comment.Username, comment.Content)
 		}
-		fmt.Printf("[%s]: %s\n", msg.Username, msg.Content)
 	}
 }
 
 func main() {
+	log.Println("🚀 Запуск клиента социальной сети...")
+
+	// Подключаемся к серверу gRPC
 	clientConn, err := grpc.NewClient("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Ошибка подключения: %v", err)
 	}
 	defer clientConn.Close()
 
-	client := pb.NewSocialServiceClient(clientConn)
+	socialClient := pb.NewSocialServiceClient(clientConn)
+	reactionsClient := pb.NewReactionsServiceClient(clientConn)
 
-	fmt.Print("Введите имя пользователя: ")
+	// Читаем имя пользователя
 	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Введите имя пользователя: ")
 	scanner.Scan()
 	username := scanner.Text()
 
-	// Запускаем потоковое получение сообщений
-	go streamMessages(client)
-
 	for {
-		fmt.Print("Введите сообщение (или 'exit' для выхода): ")
-		scanner.Scan()
-		content := scanner.Text()
+		// Перед каждым действием показываем историю чата
+		displayChatHistory(socialClient)
 
-		if content == "exit" {
-			fmt.Println("Выход из клиента...")
+		fmt.Print("\nВыберите действие:\n1 - Отправить сообщение\n2 - Лайкнуть сообщение\n3 - Комментировать сообщение\n4 - Просмотреть чат\n5 - Выход\n")
+		scanner.Scan()
+		action := scanner.Text()
+
+		if action == "5" {
+			fmt.Println("👋 Выход из клиента...")
 			break
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		_, err = client.SendMessage(ctx, &pb.MessageRequest{Username: username, Content: content})
-		cancel()
+		if action == "1" {
+			// Отправка нового сообщения
+			fmt.Print("✏ Введите сообщение: ")
+			scanner.Scan()
+			content := scanner.Text()
 
-		if err != nil {
-			log.Fatalf("Ошибка отправки сообщения: %v", err)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			_, err = socialClient.SendMessage(ctx, &pb.MessageRequest{Username: username, Content: content})
+			if err != nil {
+				log.Fatalf("Ошибка отправки сообщения: %v", err)
+			}
+
+		} else {
+			// Лайк или комментарий к сообщению
+			fmt.Print("📩 Введите ID сообщения: ")
+			scanner.Scan()
+			messageID, err := strconv.Atoi(scanner.Text())
+			if err != nil {
+				fmt.Println("⚠ Ошибка: введите корректный ID.")
+				continue
+			}
+
+			if action == "2" {
+				// Лайк сообщения
+				_, err := reactionsClient.LikeMessage(context.Background(), &pb.LikeRequest{MessageId: int32(messageID), Username: username})
+				if err != nil {
+					log.Fatalf("Ошибка лайка сообщения: %v", err)
+				}
+				fmt.Printf("✅ Лайк от %s к сообщению #%d\n", username, messageID)
+
+			} else if action == "3" {
+				// Комментарий к сообщению
+				fmt.Print("💬 Введите комментарий: ")
+				scanner.Scan()
+				content := scanner.Text()
+
+				_, err := reactionsClient.CommentMessage(context.Background(), &pb.CommentRequest{MessageId: int32(messageID), Username: username, Content: content})
+				if err != nil {
+					log.Fatalf("Ошибка комментария: %v", err)
+				}
+				fmt.Printf("✅ Комментарий к сообщению #%d отправлен!\n", messageID)
+			}
 		}
 	}
 }

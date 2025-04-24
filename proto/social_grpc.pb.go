@@ -28,11 +28,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SocialServiceClient interface {
-	// Отправка сообщения от пользователя
 	SendMessage(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*MessageResponse, error)
-	// Получение всей истории сообщений
 	GetFeed(ctx context.Context, in *FeedRequest, opts ...grpc.CallOption) (*FeedResponse, error)
-	// 🔥 Потоковое обновление: сервер отправляет новые сообщения клиентам
 	StreamFeed(ctx context.Context, in *StreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MessageRequest], error)
 }
 
@@ -87,11 +84,8 @@ type SocialService_StreamFeedClient = grpc.ServerStreamingClient[MessageRequest]
 // All implementations must embed UnimplementedSocialServiceServer
 // for forward compatibility.
 type SocialServiceServer interface {
-	// Отправка сообщения от пользователя
 	SendMessage(context.Context, *MessageRequest) (*MessageResponse, error)
-	// Получение всей истории сообщений
 	GetFeed(context.Context, *FeedRequest) (*FeedResponse, error)
-	// 🔥 Потоковое обновление: сервер отправляет новые сообщения клиентам
 	StreamFeed(*StreamRequest, grpc.ServerStreamingServer[MessageRequest]) error
 	mustEmbedUnimplementedSocialServiceServer()
 }
@@ -203,5 +197,145 @@ var SocialService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
+	Metadata: "proto/social.proto",
+}
+
+const (
+	ReactionsService_LikeMessage_FullMethodName    = "/social.ReactionsService/LikeMessage"
+	ReactionsService_CommentMessage_FullMethodName = "/social.ReactionsService/CommentMessage"
+)
+
+// ReactionsServiceClient is the client API for ReactionsService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ReactionsServiceClient interface {
+	LikeMessage(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error)
+	CommentMessage(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error)
+}
+
+type reactionsServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewReactionsServiceClient(cc grpc.ClientConnInterface) ReactionsServiceClient {
+	return &reactionsServiceClient{cc}
+}
+
+func (c *reactionsServiceClient) LikeMessage(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LikeResponse)
+	err := c.cc.Invoke(ctx, ReactionsService_LikeMessage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reactionsServiceClient) CommentMessage(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommentResponse)
+	err := c.cc.Invoke(ctx, ReactionsService_CommentMessage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ReactionsServiceServer is the server API for ReactionsService service.
+// All implementations must embed UnimplementedReactionsServiceServer
+// for forward compatibility.
+type ReactionsServiceServer interface {
+	LikeMessage(context.Context, *LikeRequest) (*LikeResponse, error)
+	CommentMessage(context.Context, *CommentRequest) (*CommentResponse, error)
+	mustEmbedUnimplementedReactionsServiceServer()
+}
+
+// UnimplementedReactionsServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedReactionsServiceServer struct{}
+
+func (UnimplementedReactionsServiceServer) LikeMessage(context.Context, *LikeRequest) (*LikeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LikeMessage not implemented")
+}
+func (UnimplementedReactionsServiceServer) CommentMessage(context.Context, *CommentRequest) (*CommentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommentMessage not implemented")
+}
+func (UnimplementedReactionsServiceServer) mustEmbedUnimplementedReactionsServiceServer() {}
+func (UnimplementedReactionsServiceServer) testEmbeddedByValue()                          {}
+
+// UnsafeReactionsServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ReactionsServiceServer will
+// result in compilation errors.
+type UnsafeReactionsServiceServer interface {
+	mustEmbedUnimplementedReactionsServiceServer()
+}
+
+func RegisterReactionsServiceServer(s grpc.ServiceRegistrar, srv ReactionsServiceServer) {
+	// If the following call pancis, it indicates UnimplementedReactionsServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&ReactionsService_ServiceDesc, srv)
+}
+
+func _ReactionsService_LikeMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LikeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReactionsServiceServer).LikeMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ReactionsService_LikeMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReactionsServiceServer).LikeMessage(ctx, req.(*LikeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReactionsService_CommentMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReactionsServiceServer).CommentMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ReactionsService_CommentMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReactionsServiceServer).CommentMessage(ctx, req.(*CommentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ReactionsService_ServiceDesc is the grpc.ServiceDesc for ReactionsService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ReactionsService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "social.ReactionsService",
+	HandlerType: (*ReactionsServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "LikeMessage",
+			Handler:    _ReactionsService_LikeMessage_Handler,
+		},
+		{
+			MethodName: "CommentMessage",
+			Handler:    _ReactionsService_CommentMessage_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/social.proto",
 }

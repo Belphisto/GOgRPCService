@@ -21,11 +21,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Запрос на отправку сообщения
 type MessageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"` // Имя пользователя
-	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`   // Текст сообщения
+	MessageId     int32                  `protobuf:"varint,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"` // Уникальный ID сообщения
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	LikeCount     int32                  `protobuf:"varint,4,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"` // ✅ Количество лайков
+	Comments      []*Comment             `protobuf:"bytes,5,rep,name=comments,proto3" json:"comments,omitempty"`                     // ✅ Комментарии к сообщению
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -60,6 +62,13 @@ func (*MessageRequest) Descriptor() ([]byte, []int) {
 	return file_proto_social_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *MessageRequest) GetMessageId() int32 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
 func (x *MessageRequest) GetUsername() string {
 	if x != nil {
 		return x.Username
@@ -74,10 +83,23 @@ func (x *MessageRequest) GetContent() string {
 	return ""
 }
 
-// Ответ после отправки сообщения
+func (x *MessageRequest) GetLikeCount() int32 {
+	if x != nil {
+		return x.LikeCount
+	}
+	return 0
+}
+
+func (x *MessageRequest) GetComments() []*Comment {
+	if x != nil {
+		return x.Comments
+	}
+	return nil
+}
+
 type MessageResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"` // Успех выполнения
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -119,10 +141,8 @@ func (x *MessageResponse) GetSuccess() bool {
 	return false
 }
 
-// Запрос на получение истории сообщений
 type FeedRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"` // Количество сообщений для запроса
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -157,17 +177,9 @@ func (*FeedRequest) Descriptor() ([]byte, []int) {
 	return file_proto_social_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *FeedRequest) GetLimit() int32 {
-	if x != nil {
-		return x.Limit
-	}
-	return 0
-}
-
-// Ответ с историей сообщений
 type FeedResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Messages      []*MessageRequest      `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"` // Список сообщений
+	Messages      []*MessageRequest      `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,7 +221,6 @@ func (x *FeedResponse) GetMessages() []*MessageRequest {
 	return nil
 }
 
-// Пустой запрос для потокового обновления
 type StreamRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -246,26 +257,320 @@ func (*StreamRequest) Descriptor() ([]byte, []int) {
 	return file_proto_social_proto_rawDescGZIP(), []int{4}
 }
 
+type LikeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MessageId     int32                  `protobuf:"varint,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LikeRequest) Reset() {
+	*x = LikeRequest{}
+	mi := &file_proto_social_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LikeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LikeRequest) ProtoMessage() {}
+
+func (x *LikeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_social_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LikeRequest.ProtoReflect.Descriptor instead.
+func (*LikeRequest) Descriptor() ([]byte, []int) {
+	return file_proto_social_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LikeRequest) GetMessageId() int32 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+func (x *LikeRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+type LikeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	LikeCount     int32                  `protobuf:"varint,2,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LikeResponse) Reset() {
+	*x = LikeResponse{}
+	mi := &file_proto_social_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LikeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LikeResponse) ProtoMessage() {}
+
+func (x *LikeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_social_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LikeResponse.ProtoReflect.Descriptor instead.
+func (*LikeResponse) Descriptor() ([]byte, []int) {
+	return file_proto_social_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *LikeResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *LikeResponse) GetLikeCount() int32 {
+	if x != nil {
+		return x.LikeCount
+	}
+	return 0
+}
+
+type CommentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MessageId     int32                  `protobuf:"varint,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommentRequest) Reset() {
+	*x = CommentRequest{}
+	mi := &file_proto_social_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommentRequest) ProtoMessage() {}
+
+func (x *CommentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_social_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommentRequest.ProtoReflect.Descriptor instead.
+func (*CommentRequest) Descriptor() ([]byte, []int) {
+	return file_proto_social_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CommentRequest) GetMessageId() int32 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+func (x *CommentRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *CommentRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type CommentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Comments      []*Comment             `protobuf:"bytes,2,rep,name=comments,proto3" json:"comments,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommentResponse) Reset() {
+	*x = CommentResponse{}
+	mi := &file_proto_social_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommentResponse) ProtoMessage() {}
+
+func (x *CommentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_social_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommentResponse.ProtoReflect.Descriptor instead.
+func (*CommentResponse) Descriptor() ([]byte, []int) {
+	return file_proto_social_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CommentResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *CommentResponse) GetComments() []*Comment {
+	if x != nil {
+		return x.Comments
+	}
+	return nil
+}
+
+type Comment struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Comment) Reset() {
+	*x = Comment{}
+	mi := &file_proto_social_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Comment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Comment) ProtoMessage() {}
+
+func (x *Comment) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_social_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Comment.ProtoReflect.Descriptor instead.
+func (*Comment) Descriptor() ([]byte, []int) {
+	return file_proto_social_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Comment) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *Comment) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
 var File_proto_social_proto protoreflect.FileDescriptor
 
 const file_proto_social_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/social.proto\x12\x06social\"F\n" +
-	"\x0eMessageRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"+\n" +
+	"\x12proto/social.proto\x12\x06social\"\xb1\x01\n" +
+	"\x0eMessageRequest\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x01 \x01(\x05R\tmessageId\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1d\n" +
+	"\n" +
+	"like_count\x18\x04 \x01(\x05R\tlikeCount\x12+\n" +
+	"\bcomments\x18\x05 \x03(\v2\x0f.social.CommentR\bcomments\"+\n" +
 	"\x0fMessageResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"#\n" +
-	"\vFeedRequest\x12\x14\n" +
-	"\x05limit\x18\x01 \x01(\x05R\x05limit\"B\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\r\n" +
+	"\vFeedRequest\"B\n" +
 	"\fFeedResponse\x122\n" +
 	"\bmessages\x18\x01 \x03(\v2\x16.social.MessageRequestR\bmessages\"\x0f\n" +
-	"\rStreamRequest2\xc4\x01\n" +
+	"\rStreamRequest\"H\n" +
+	"\vLikeRequest\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x01 \x01(\x05R\tmessageId\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\"G\n" +
+	"\fLikeResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
+	"\n" +
+	"like_count\x18\x02 \x01(\x05R\tlikeCount\"e\n" +
+	"\x0eCommentRequest\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x01 \x01(\x05R\tmessageId\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\"X\n" +
+	"\x0fCommentResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12+\n" +
+	"\bcomments\x18\x02 \x03(\v2\x0f.social.CommentR\bcomments\"?\n" +
+	"\aComment\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent2\xc4\x01\n" +
 	"\rSocialService\x12>\n" +
 	"\vSendMessage\x12\x16.social.MessageRequest\x1a\x17.social.MessageResponse\x124\n" +
 	"\aGetFeed\x12\x13.social.FeedRequest\x1a\x14.social.FeedResponse\x12=\n" +
 	"\n" +
-	"StreamFeed\x12\x15.social.StreamRequest\x1a\x16.social.MessageRequest0\x01B\bZ\x06/protob\x06proto3"
+	"StreamFeed\x12\x15.social.StreamRequest\x1a\x16.social.MessageRequest0\x012\x8f\x01\n" +
+	"\x10ReactionsService\x128\n" +
+	"\vLikeMessage\x12\x13.social.LikeRequest\x1a\x14.social.LikeResponse\x12A\n" +
+	"\x0eCommentMessage\x12\x16.social.CommentRequest\x1a\x17.social.CommentResponseB\bZ\x06/protob\x06proto3"
 
 var (
 	file_proto_social_proto_rawDescOnce sync.Once
@@ -279,27 +584,38 @@ func file_proto_social_proto_rawDescGZIP() []byte {
 	return file_proto_social_proto_rawDescData
 }
 
-var file_proto_social_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_proto_social_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_proto_social_proto_goTypes = []any{
 	(*MessageRequest)(nil),  // 0: social.MessageRequest
 	(*MessageResponse)(nil), // 1: social.MessageResponse
 	(*FeedRequest)(nil),     // 2: social.FeedRequest
 	(*FeedResponse)(nil),    // 3: social.FeedResponse
 	(*StreamRequest)(nil),   // 4: social.StreamRequest
+	(*LikeRequest)(nil),     // 5: social.LikeRequest
+	(*LikeResponse)(nil),    // 6: social.LikeResponse
+	(*CommentRequest)(nil),  // 7: social.CommentRequest
+	(*CommentResponse)(nil), // 8: social.CommentResponse
+	(*Comment)(nil),         // 9: social.Comment
 }
 var file_proto_social_proto_depIdxs = []int32{
-	0, // 0: social.FeedResponse.messages:type_name -> social.MessageRequest
-	0, // 1: social.SocialService.SendMessage:input_type -> social.MessageRequest
-	2, // 2: social.SocialService.GetFeed:input_type -> social.FeedRequest
-	4, // 3: social.SocialService.StreamFeed:input_type -> social.StreamRequest
-	1, // 4: social.SocialService.SendMessage:output_type -> social.MessageResponse
-	3, // 5: social.SocialService.GetFeed:output_type -> social.FeedResponse
-	0, // 6: social.SocialService.StreamFeed:output_type -> social.MessageRequest
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	9, // 0: social.MessageRequest.comments:type_name -> social.Comment
+	0, // 1: social.FeedResponse.messages:type_name -> social.MessageRequest
+	9, // 2: social.CommentResponse.comments:type_name -> social.Comment
+	0, // 3: social.SocialService.SendMessage:input_type -> social.MessageRequest
+	2, // 4: social.SocialService.GetFeed:input_type -> social.FeedRequest
+	4, // 5: social.SocialService.StreamFeed:input_type -> social.StreamRequest
+	5, // 6: social.ReactionsService.LikeMessage:input_type -> social.LikeRequest
+	7, // 7: social.ReactionsService.CommentMessage:input_type -> social.CommentRequest
+	1, // 8: social.SocialService.SendMessage:output_type -> social.MessageResponse
+	3, // 9: social.SocialService.GetFeed:output_type -> social.FeedResponse
+	0, // 10: social.SocialService.StreamFeed:output_type -> social.MessageRequest
+	6, // 11: social.ReactionsService.LikeMessage:output_type -> social.LikeResponse
+	8, // 12: social.ReactionsService.CommentMessage:output_type -> social.CommentResponse
+	8, // [8:13] is the sub-list for method output_type
+	3, // [3:8] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_social_proto_init() }
@@ -313,9 +629,9 @@ func file_proto_social_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_social_proto_rawDesc), len(file_proto_social_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   10,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_proto_social_proto_goTypes,
 		DependencyIndexes: file_proto_social_proto_depIdxs,
