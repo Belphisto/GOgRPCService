@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package social;
+option go_package = "/proto";
+
+service SocialService {
+  // Отправка сообщения от пользователя
+  rpc SendMessage (MessageRequest) returns (MessageResponse);
+
+  // Получение всей истории сообщений
+  rpc GetFeed (FeedRequest) returns (FeedResponse);
+
+  // 🔥 Потоковое обновление: сервер отправляет новые сообщения клиентам
+  rpc StreamFeed (StreamRequest) returns (stream MessageRequest);
+}
+
+// Запрос на отправку сообщения
+message MessageRequest {
+  string username = 1; // Имя пользователя
+  string content = 2;  // Текст сообщения
+}
+
+// Ответ после отправки сообщения
+message MessageResponse {
+  bool success = 1;  // Успех выполнения
+}
+
+// Запрос на получение истории сообщений
+message FeedRequest {
+  int32 limit = 1;  // Количество сообщений для запроса
+}
+
+// Ответ с историей сообщений
+message FeedResponse {
+  repeated MessageRequest messages = 1; // Список сообщений
+}
+
+// Пустой запрос для потокового обновления
+message StreamRequest {}
