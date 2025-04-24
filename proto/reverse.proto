@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package reverse;
+option go_package = "proto/";
+
+service ReverseService {
+  rpc ReverseString (ReverseRequest) returns (ReverseResponse);
+}
+
+message ReverseRequest {
+  string input = 1;
+}
+
+message ReverseResponse {
+  string output = 1;
+}
