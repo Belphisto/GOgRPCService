@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -67,6 +68,12 @@ type ReactionsServer struct {
 func (s *ReactionsServer) LikeMessage(ctx context.Context, req *pb.LikeRequest) (*pb.LikeResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	// Проверяем, существует ли сообщение с таким ID
+	if req.MessageId < 1 || int(req.MessageId) > len(socialServer.messages) {
+		log.Printf("❌ Ошибка: Сообщение #%d не найдено\n", req.MessageId)
+		return nil, fmt.Errorf("сообщение #%d не найдено", req.MessageId)
+	}
 
 	for _, msg := range socialServer.messages {
 		if msg.ID == req.MessageId {

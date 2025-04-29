@@ -56,7 +56,7 @@ func main() {
 		// Перед каждым действием показываем историю чата
 		displayChatHistory(socialClient)
 
-		fmt.Print("\nВыберите действие:\n1 - Отправить сообщение\n2 - Лайкнуть сообщение\n3 - Комментировать сообщение\n4 - Просмотреть чат\n5 - Выход\n")
+		fmt.Print("\nВыберите действие:\n1 - Отправить сообщение\n2 - Лайкнуть сообщение\n3 - Комментировать сообщение\n\n5 - Выход\n")
 		scanner.Scan()
 		action := scanner.Text()
 
@@ -93,8 +93,10 @@ func main() {
 				// Лайк сообщения
 				_, err := reactionsClient.LikeMessage(context.Background(), &pb.LikeRequest{MessageId: int32(messageID), Username: username})
 				if err != nil {
-					log.Fatalf("Ошибка лайка сообщения: %v", err)
+					fmt.Printf("⚠ Ошибка: %v\n", err)
+					continue // Не прерываем весь клиент, а просто сообщаем пользователю
 				}
+
 				fmt.Printf("✅ Лайк от %s к сообщению #%d\n", username, messageID)
 
 			} else if action == "3" {
